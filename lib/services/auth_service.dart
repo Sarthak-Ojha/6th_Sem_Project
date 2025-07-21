@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -48,6 +49,26 @@ class AuthService with ChangeNotifier {
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthException(e));
     }
+  }
+
+// Add these methods to your AuthService class
+  Future<void> setRememberMe(bool remember) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('remember_me', remember);
+  }
+
+  Future<bool> getRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('remember_me') ?? false;
+  }
+
+  Future<bool> checkAuthState() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.reload();
+      return user.emailVerified;
+    }
+    return false;
   }
 
   // Sign in with Google
@@ -194,6 +215,4 @@ class AuthService with ChangeNotifier {
         return e.message ?? 'An authentication error occurred';
     }
   }
-
-  Future<void> sendVerificationEmail() async {}
 }

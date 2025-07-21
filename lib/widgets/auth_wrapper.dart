@@ -2,8 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/home_screen.dart';
-import '../screens/login_screen.dart';
+import '../screens/signin_screen.dart'; // CHANGED: Import SigninScreen instead of LoginScreen
 import '../screens/verify_email_screen.dart';
+import '../screens/splash_screen.dart'; // ADDED: Import SplashScreen
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -13,31 +14,141 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Show a loading indicator while checking auth state
+        // Show loading/splash screen while checking auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+          return const SplashScreen(); // CHANGED: Use SplashScreen instead of basic loading
+        }
+        // Handle stream errors
+        else if (snapshot.hasError) {
+          return ErrorScreen(
+            title: 'Authentication Error',
+            message: 'Something went wrong with authentication.',
+            error: snapshot.error.toString(),
+            onRetry: () {
+              // Trigger a rebuild by creating a new stream
+              FirebaseAuth.instance.authStateChanges();
+            },
           );
         }
-        // If the user is logged in
+        // If user is logged in
         else if (snapshot.hasData) {
           final user = snapshot.data!;
-          // Check if their email is verified
+          // Check if email is verified
           if (user.emailVerified) {
-            return const HomeScreen();
+            return const HomeScreen(); // ADDED: const
           } else {
-            // If not verified, send them to the verification screen
-            return const VerifyEmailScreen();
+            // Show email verification screen
+            return const VerifyEmailScreen(); // ADDED: const
           }
         }
-        // If the user is logged out
+        // If user is not logged in
         else {
-          // Send them to the login screen
-          return const LoginScreen();
+          // Send them to the signin screen - UPDATED
+          return const SigninScreen(); // CHANGED: Use SigninScreen instead of LoginScreen
         }
       },
+    );
+  }
+}
+
+// Enhanced Error Screen
+class ErrorScreen extends StatelessWidget {
+  final String title;
+  final String message;
+  final String error;
+  final VoidCallback? onRetry;
+
+  const ErrorScreen({
+    super.key,
+    required this.title,
+    required this.message,
+    required this.error,
+    this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Error Icon
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.error_outline,
+                    size: 50,
+                    color: Colors.red.shade400,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Title
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red.shade700,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                // Message
+                Text(
+                  message,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // Error Details (collapsible)
+                ExpansionTile(
+                  title: const Text('Error Details'),
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        error,
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                // Retry Button
+                if (onRetry != null)
+                  ElevatedButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

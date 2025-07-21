@@ -1,15 +1,12 @@
-// signup_screen.dart
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously, prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '/services/auth_service.dart';
+import '../services/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  _SignupScreenState createState() => _SignupScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
 class _SignupScreenState extends State<SignupScreen> {
@@ -22,7 +19,6 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _isLogin = false;
 
   @override
   void dispose() {
@@ -32,42 +28,38 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  void _toggleAuthMode() {
-    setState(() {
-      _isLogin = !_isLogin;
-    });
+  void _navigateToSignin() {
+    Navigator.of(context).pushReplacementNamed('/signin');
   }
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      if (_isLogin) {
-        await _authService.signInWithEmailAndPassword(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
-      } else {
-        await _authService.signUpWithEmailAndPassword(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
-
-        // Show email verification dialog
-        _showEmailVerificationDialog();
-      }
+      await _authService.signUpWithEmailAndPassword(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      if (mounted) _showEmailVerificationDialog();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -76,36 +68,64 @@ class _SignupScreenState extends State<SignupScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('Verify Your Email'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Verify Your Email'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.email, size: 50, color: Colors.blue),
-            SizedBox(height: 16),
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1976D2).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.mark_email_unread,
+                color: Color(0xFF1976D2),
+                size: 30,
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
               'We\'ve sent a verification email to ${_emailController.text}',
+              textAlign: TextAlign.center,
             ),
-            SizedBox(height: 16),
-            Text('Please check your email and click the verification link.'),
+            const SizedBox(height: 8),
+            Text(
+              'Please check your email and click the verification link.',
+              style: TextStyle(color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () async {
               await _authService.sendEmailVerification();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Verification email sent!')),
-              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Verification email sent!'),
+                      ],
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
             },
-            child: Text('Resend Email'),
+            child: const Text('Resend Email'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              // Force refresh the auth state
               FirebaseAuth.instance.currentUser?.reload();
             },
-            child: Text('I\'ve Verified'),
+            child: const Text('I\'ve Verified'),
           ),
         ],
       ),
@@ -113,68 +133,129 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       await _authService.signInWithGoogle();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google Sign-In failed: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Google Sign-In failed: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+              elevation: 12,
+              shadowColor: Colors.black.withOpacity(0.1),
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(32),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header
-                      Icon(Icons.account_circle, size: 80, color: Colors.blue),
-                      SizedBox(height: 16),
+                      // Logo/Icon
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1976D2).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.person_add,
+                          size: 50,
+                          color: Color(0xFF1976D2),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Title
                       Text(
-                        _isLogin ? 'Welcome Back!' : 'Create Account',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
+                        'Create your\nAccount',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Sign up to get started with Quiz Master',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey.shade600,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 32),
+                      const SizedBox(height: 32),
+
+                      // Google Sign-In Button
+                      OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _signInWithGoogle,
+                        icon: Container(
+                          width: 20,
+                          height: 20,
+                          child: const Icon(
+                            Icons.g_mobiledata,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                        ),
+                        label: const Text('Continue with Google'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(color: Colors.grey.shade300),
+                          foregroundColor: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Divider
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.grey.shade300)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'Or',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.grey.shade300)),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
 
                       // Email Field
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Email',
-                          prefixIcon: Icon(Icons.email),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          prefixIcon: Icon(Icons.email_outlined),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -186,7 +267,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
                       // Password Field
                       TextFormField(
@@ -194,21 +275,18 @@ class _SignupScreenState extends State<SignupScreen> {
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          prefixIcon: Icon(Icons.lock),
+                          prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
                             ),
                             onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
+                              setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              );
                             },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         validator: (value) {
@@ -221,100 +299,64 @@ class _SignupScreenState extends State<SignupScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                      // Confirm Password Field (only for signup)
-                      if (!_isLogin)
-                        TextFormField(
-                          controller: _confirmPasswordController,
-                          obscureText: _obscureConfirmPassword,
-                          decoration: InputDecoration(
-                            labelText: 'Confirm Password',
-                            prefixIcon: Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureConfirmPassword
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureConfirmPassword =
-                                      !_obscureConfirmPassword;
-                                });
-                              },
+                      // Confirm Password Field
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: _obscureConfirmPassword,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
                             ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            onPressed: () {
+                              setState(
+                                () => _obscureConfirmPassword =
+                                    !_obscureConfirmPassword,
+                              );
+                            },
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please confirm your password';
-                            }
-                            if (value != _passwordController.text) {
-                              return 'Passwords do not match';
-                            }
-                            return null;
-                          },
                         ),
-                      if (!_isLogin) SizedBox(height: 24),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          }
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
 
-                      // Submit Button
+                      // Sign Up Button
                       ElevatedButton(
                         onPressed: _isLoading ? null : _submitForm,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: _isLoading
-                            ? CircularProgressIndicator(color: Colors.white)
-                            : Text(
-                                _isLogin ? 'Sign In' : 'Sign Up',
-                                style: TextStyle(fontSize: 16),
-                              ),
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Sign Up'),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 24),
 
-                      // Divider
-                      Row(
-                        children: [
-                          Expanded(child: Divider()),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('OR'),
-                          ),
-                          Expanded(child: Divider()),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-
-                      // Google Sign-In Button
-                      OutlinedButton.icon(
-                        onPressed: _isLoading ? null : _signInWithGoogle,
-                        icon: Icon(Icons.login, color: Colors.red),
-                        label: Text('Continue with Google'),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 24),
-
-                      // Toggle Auth Mode
+                      // Sign In Link
                       TextButton(
-                        onPressed: _toggleAuthMode,
-                        child: Text(
-                          _isLogin
-                              ? 'Don\'t have an account? Sign up'
-                              : 'Already have an account? Sign in',
-                        ),
+                        onPressed: _isLoading ? null : _navigateToSignin,
+                        child: const Text('Already have an account? Sign In'),
                       ),
                     ],
                   ),
