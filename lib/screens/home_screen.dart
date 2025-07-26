@@ -473,7 +473,7 @@ class _CategoryPageState extends State<CategoryPage>
   Widget _buildCategoryCard(BuildContext context, QuizCategory category) {
     return Card(
       elevation: 6,
-      shadowColor: category.color.withOpacity(0.2),
+      shadowColor: category.color.withValues(alpha: 51), // 0.2
       child: InkWell(
         onTap: () => _startQuiz(context, category),
         borderRadius: BorderRadius.circular(16),
@@ -484,8 +484,8 @@ class _CategoryPageState extends State<CategoryPage>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                category.color.withOpacity(0.1),
-                category.color.withOpacity(0.05),
+                category.color.withValues(alpha: 25), // 0.1
+                category.color.withValues(alpha: 13), // 0.05
               ],
             ),
           ),
@@ -495,7 +495,7 @@ class _CategoryPageState extends State<CategoryPage>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: category.color.withOpacity(0.2),
+                  color: category.color.withValues(alpha: 51), // 0.2
                   shape: BoxShape.circle,
                 ),
                 child: Icon(category.icon, size: 32, color: category.color),
@@ -537,14 +537,17 @@ class UserStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 8,
-      shadowColor: const Color(0xFF1976D2).withOpacity(0.1),
+      shadowColor: const Color(0xFF1976D2).withValues(alpha: 25), // 0.1
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [const Color(0xFF1976D2).withOpacity(0.05), Colors.white],
+            colors: [
+              const Color(0xFF1976D2).withValues(alpha: 13),
+              Colors.white,
+            ], // 0.05
           ),
         ),
         child: Padding(
@@ -602,7 +605,7 @@ class UserStatsCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1976D2).withOpacity(0.1),
+                  color: const Color(0xFF1976D2).withValues(alpha: 25), // 0.1
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -639,7 +642,7 @@ class UserStatsCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 25), // 0.1
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),

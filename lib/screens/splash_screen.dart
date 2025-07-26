@@ -83,11 +83,11 @@ class _SplashScreenState extends State<SplashScreen>
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 51), // 0.2
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 25), // 0.1
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -115,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
                   Text(
                     'Test Your Knowledge',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 204), // 0.8
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -125,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
                     width: 30,
                     height: 30,
                     child: CircularProgressIndicator(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 204), // 0.8
                       strokeWidth: 2,
                     ),
                   ),

@@ -198,7 +198,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 13), // 0.05
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -259,7 +259,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF1976D2).withOpacity(0.3),
+                                color: const Color(
+                                  0xFF1976D2,
+                                ).withValues(alpha: 77), // 0.3
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
@@ -302,12 +304,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                                   decoration: BoxDecoration(
                                     color: const Color(
                                       0xFF1976D2,
-                                    ).withOpacity(0.1),
+                                    ).withValues(alpha: 25), // 0.1
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
                                       color: const Color(
                                         0xFF1976D2,
-                                      ).withOpacity(0.3),
+                                      ).withValues(alpha: 77), // 0.3
                                       width: 1,
                                     ),
                                   ),

@@ -58,7 +58,9 @@ class MyApp extends StatelessWidget {
         // Card Theme
         cardTheme: CardThemeData(
           elevation: 8,
-          shadowColor: Colors.black.withOpacity(0.1),
+          shadowColor: Colors.black.withValues(
+            alpha: 25,
+          ), // replaces withOpacity(0.1)
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -71,7 +73,9 @@ class MyApp extends StatelessWidget {
             backgroundColor: const Color(0xFF1976D2),
             foregroundColor: Colors.white,
             elevation: 2,
-            shadowColor: Colors.blue.withOpacity(0.3),
+            shadowColor: Colors.blue.withValues(
+              alpha: 77,
+            ), // replaces withOpacity(0.3)
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -188,6 +192,9 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+// The rest of your file remains unchanged...
+// [ErrorApp, ErrorScreen, NotFoundScreen definitions stay the same]
 
 // Error App for Firebase initialization errors
 class ErrorApp extends StatelessWidget {

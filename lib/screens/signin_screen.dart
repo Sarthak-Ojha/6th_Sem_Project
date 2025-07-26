@@ -39,25 +39,25 @@ class _SigninScreenState extends State<SigninScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
-
       if (_rememberMe) {
         await _authService.setRememberMe(true);
       }
+      if (!mounted) return;
+      // Optionally navigate after success
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Error: ${e.toString()}')),
-              ],
-            ),
-            backgroundColor: Colors.red,
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Error: ${e.toString()}')),
+            ],
           ),
-        );
-      }
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -68,21 +68,22 @@ class _SigninScreenState extends State<SigninScreen> {
 
     try {
       await _authService.signInWithGoogle();
+      if (!mounted) return;
+      // Optionally navigate after success
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Google Sign-In failed: ${e.toString()}')),
-              ],
-            ),
-            backgroundColor: Colors.red,
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Google Sign-In failed: ${e.toString()}')),
+            ],
           ),
-        );
-      }
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -95,7 +96,7 @@ class _SigninScreenState extends State<SigninScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Reset Password'),
         content: Column(
@@ -105,7 +106,7 @@ class _SigninScreenState extends State<SigninScreen> {
               'Enter your email to receive a password reset link.',
               style: TextStyle(color: Colors.grey.shade600),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             TextField(
               controller: resetEmailController,
               keyboardType: TextInputType.emailAddress,
@@ -119,7 +120,7 @@ class _SigninScreenState extends State<SigninScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -129,31 +130,29 @@ class _SigninScreenState extends State<SigninScreen> {
 
               try {
                 await _authService.resetPassword(email);
-                if (mounted) {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Row(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Password reset email sent!'),
-                        ],
-                      ),
-                      backgroundColor: Colors.green,
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  const SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Password reset email sent!'),
+                      ],
                     ),
-                  );
-                }
+                    backgroundColor: Colors.green,
+                  ),
+                );
               } catch (e) {
-                if (mounted) {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: ${e.toString()}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: ${e.toString()}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
             child: const Text('Send Link'),
@@ -173,7 +172,9 @@ class _SigninScreenState extends State<SigninScreen> {
             padding: const EdgeInsets.all(24),
             child: Card(
               elevation: 12,
-              shadowColor: Colors.black.withOpacity(0.1),
+              shadowColor: Colors.black.withValues(
+                alpha: 25,
+              ), // replaces .withOpacity(0.1)
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Form(
@@ -187,7 +188,9 @@ class _SigninScreenState extends State<SigninScreen> {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1976D2).withOpacity(0.1),
+                          color: const Color(
+                            0xFF1976D2,
+                          ).withValues(alpha: 25), // replaces .withOpacity(0.1)
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(

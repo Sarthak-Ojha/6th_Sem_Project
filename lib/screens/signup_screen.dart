@@ -44,20 +44,19 @@ class _SignupScreenState extends State<SignupScreen> {
       );
       if (mounted) _showEmailVerificationDialog();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Error: ${e.toString()}')),
-              ],
-            ),
-            backgroundColor: Colors.red,
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Error: ${e.toString()}')),
+            ],
           ),
-        );
-      }
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -67,7 +66,7 @@ class _SignupScreenState extends State<SignupScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Verify Your Email'),
         content: Column(
@@ -77,7 +76,9 @@ class _SignupScreenState extends State<SignupScreen> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: const Color(0xFF1976D2).withOpacity(0.1),
+                color: const Color(
+                  0xFF1976D2,
+                ).withValues(alpha: 25), // was .withOpacity(0.1)
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -103,26 +104,25 @@ class _SignupScreenState extends State<SignupScreen> {
           TextButton(
             onPressed: () async {
               await _authService.sendEmailVerification();
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text('Verification email sent!'),
-                      ],
-                    ),
-                    backgroundColor: Colors.green,
+              if (!dialogContext.mounted) return;
+              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                const SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Verification email sent!'),
+                    ],
                   ),
-                );
-              }
+                  backgroundColor: Colors.green,
+                ),
+              );
             },
             child: const Text('Resend Email'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(dialogContext).pop();
               FirebaseAuth.instance.currentUser?.reload();
             },
             child: const Text('I\'ve Verified'),
@@ -137,21 +137,22 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       await _authService.signInWithGoogle();
+      if (!mounted) return;
+      // Optionally navigate after success
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Google Sign-In failed: ${e.toString()}')),
-              ],
-            ),
-            backgroundColor: Colors.red,
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Google Sign-In failed: ${e.toString()}')),
+            ],
           ),
-        );
-      }
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -167,7 +168,9 @@ class _SignupScreenState extends State<SignupScreen> {
             padding: const EdgeInsets.all(24),
             child: Card(
               elevation: 12,
-              shadowColor: Colors.black.withOpacity(0.1),
+              shadowColor: Colors.black.withValues(
+                alpha: 25,
+              ), // was .withOpacity(0.1)
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Form(
@@ -181,7 +184,9 @@ class _SignupScreenState extends State<SignupScreen> {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1976D2).withOpacity(0.1),
+                          color: const Color(
+                            0xFF1976D2,
+                          ).withValues(alpha: 25), // was .withOpacity(0.1)
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -215,7 +220,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       // Google Sign-In Button
                       OutlinedButton.icon(
                         onPressed: _isLoading ? null : _signInWithGoogle,
-                        icon: Container(
+                        icon: SizedBox(
                           width: 20,
                           height: 20,
                           child: const Icon(

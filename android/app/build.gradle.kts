@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.quiz"
+    namespace = "com.sarthak.quiz"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -30,7 +30,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.quiz"
+        applicationId = "com.sarthak.quiz"
         minSdk = 23 // 🔧 Updated manually to meet Firebase requirement
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
