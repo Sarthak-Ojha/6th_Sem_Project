@@ -169,12 +169,7 @@ class _CategoryPageState extends State<CategoryPage>
     with AutomaticKeepAliveClientMixin {
   late Future<UserData> _userDataFuture;
 
-  // Modes!
-  final List<String> _modes = [
-    'Category Mode',
-    'Quick Mode',
-    // add more modes here if you like
-  ];
+  final List<String> _modes = ['Category Mode', 'Quick Mode', 'KBC Mode'];
   String _selectedMode = 'Category Mode';
 
   static const List<QuizCategory> _categories = [
@@ -446,9 +441,25 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  // ----------- OTHER MODES display ----------
+  /// ----------- MODES LOGIC: QUICK & KBC -----------
   Widget _buildOtherModeContent(BuildContext context) {
     if (_selectedMode == 'Quick Mode') {
+      return _QuickModeOptions(
+        categories: _categories,
+        onStartQuiz: (selectedCategories, isRandom) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isRandom
+                    ? 'Rapid Fire: Random questions from ALL categories!'
+                    : 'Quick quiz for: ${selectedCategories.map((e) => e.name).join(", ")}',
+              ),
+            ),
+          );
+        },
+      );
+    }
+    if (_selectedMode == 'KBC Mode') {
       return Card(
         margin: const EdgeInsets.only(top: 8),
         child: Padding(
@@ -457,23 +468,25 @@ class _CategoryPageState extends State<CategoryPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Quick Mode',
+                'KBC Mode',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               const Text(
-                'A rapid-fire quiz round with random questions from all categories.',
+                'Play in KBC (Ko banchha crorepati) style! Answer questions one by one, increasing in difficulty and prize. Lifelines available!',
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Start Quick Quiz'),
+                  icon: const Icon(Icons.stars),
+                  label: const Text('Start KBC Mode'),
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Quick Quiz starting (not implemented)!'),
+                        content: Text(
+                          'KBC Mode starting (implement your navigation)!',
+                        ),
                       ),
                     );
                   },
@@ -488,12 +501,10 @@ class _CategoryPageState extends State<CategoryPage>
         ),
       );
     }
-    // Add more else if blocks for additional modes
     return Container();
   }
 
-  // ----------- UI sections from your previous code ------------
-
+  /// ----------- STANDARD UI sections ------------
   Widget _buildWelcomeSection(BuildContext context, UserData userData) {
     return Card(
       margin: EdgeInsets.zero,
@@ -625,6 +636,136 @@ class _CategoryPageState extends State<CategoryPage>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- QUICK MODE/RAPID FIRE OPTIONS WIDGET ---
+class _QuickModeOptions extends StatefulWidget {
+  final List<QuizCategory> categories;
+  final void Function(List<QuizCategory> selected, bool isRandom) onStartQuiz;
+  const _QuickModeOptions({
+    required this.categories,
+    required this.onStartQuiz,
+  });
+
+  @override
+  State<_QuickModeOptions> createState() => _QuickModeOptionsState();
+}
+
+class _QuickModeOptionsState extends State<_QuickModeOptions> {
+  bool _isRandom = true;
+  final Set<int> _selectedIndexes = {};
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Rapid Fire / Quick Mode',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: ToggleButtons(
+                    isSelected: [_isRandom, !_isRandom],
+                    borderRadius: BorderRadius.circular(8),
+                    onPressed: (idx) {
+                      setState(() => _isRandom = idx == 0);
+                    },
+                    selectedColor: Colors.white,
+                    fillColor: const Color(0xFF1976D2),
+                    borderColor: const Color(0xFF1976D2),
+                    color: const Color(0xFF1976D2),
+                    children: const [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          "Random",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          "Choose Categories",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (!_isRandom) ...[
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: List.generate(widget.categories.length, (i) {
+                  final cat = widget.categories[i];
+                  final selected = _selectedIndexes.contains(i);
+                  return FilterChip(
+                    label: Text(cat.name),
+                    selected: selected,
+                    selectedColor: cat.color.withOpacity(0.2),
+                    onSelected: (_) {
+                      setState(() {
+                        if (selected) {
+                          _selectedIndexes.remove(i);
+                        } else {
+                          _selectedIndexes.add(i);
+                        }
+                      });
+                    },
+                    avatar: Icon(
+                      cat.icon,
+                      color: selected ? cat.color : Colors.grey,
+                    ),
+                    labelStyle: TextStyle(
+                      color: selected ? cat.color : Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    backgroundColor: Colors.grey.shade100,
+                    checkmarkColor: cat.color,
+                  );
+                }),
+              ),
+            ],
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.play_arrow),
+                label: Text(
+                  _isRandom ? 'Start Random Quiz' : 'Start Custom Quiz',
+                ),
+                onPressed: _isRandom || _selectedIndexes.isNotEmpty
+                    ? () {
+                        final selected = _isRandom
+                            ? List<QuizCategory>.from(widget.categories)
+                            : _selectedIndexes
+                                  .map((i) => widget.categories[i])
+                                  .toList();
+                        widget.onStartQuiz(selected, _isRandom);
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1976D2),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
