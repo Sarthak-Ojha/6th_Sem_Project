@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 
+// --- Data Models ---
 class QuizCategory {
   final String name;
   final IconData icon;
@@ -34,9 +35,9 @@ class UserData {
   });
 }
 
+// --- MAIN HOME SCREEN ---
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -64,7 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _signOut() async {
     setState(() => _isSigningOut = true);
-
     try {
       await _authService.signOut();
     } catch (e) {
@@ -90,7 +90,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-
     return PopScope(
       canPop: _selectedIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
@@ -159,9 +158,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// ------------ CATEGORY PAGE - WITH MODES SECTION --------------
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
-
   @override
   State<CategoryPage> createState() => _CategoryPageState();
 }
@@ -169,6 +168,14 @@ class CategoryPage extends StatefulWidget {
 class _CategoryPageState extends State<CategoryPage>
     with AutomaticKeepAliveClientMixin {
   late Future<UserData> _userDataFuture;
+
+  // Modes!
+  final List<String> _modes = [
+    'Category Mode',
+    'Quick Mode',
+    // add more modes here if you like
+  ];
+  String _selectedMode = 'Category Mode';
 
   static const List<QuizCategory> _categories = [
     QuizCategory(
@@ -236,7 +243,6 @@ class _CategoryPageState extends State<CategoryPage>
     if (currentUser == null) {
       throw Exception('No user logged in');
     }
-
     return UserData(
       displayName: currentUser.displayName ?? 'Quiz Master',
       email: currentUser.email ?? '',
@@ -379,7 +385,14 @@ class _CategoryPageState extends State<CategoryPage>
                   const SizedBox(height: 20),
                   UserStatsCard(userData: userData),
                   const SizedBox(height: 32),
-                  _buildCategoriesSection(context),
+                  _buildModesSection(context),
+                  if (_selectedMode == 'Category Mode') ...[
+                    const SizedBox(height: 24),
+                    _buildCategoriesSection(context),
+                  ] else ...[
+                    const SizedBox(height: 16),
+                    _buildOtherModeContent(context),
+                  ],
                 ],
               ),
             );
@@ -390,6 +403,96 @@ class _CategoryPageState extends State<CategoryPage>
       ),
     );
   }
+
+  // -------- MODES Picker UI ----------
+  Widget _buildModesSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.gamepad, color: Color(0xFF1976D2), size: 28),
+            const SizedBox(width: 8),
+            Text(
+              'Choose a Mode',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1976D2),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          children: _modes.map((mode) {
+            final isSelected = mode == _selectedMode;
+            return ChoiceChip(
+              label: Text(mode),
+              selected: isSelected,
+              selectedColor: const Color(0xFF1976D2),
+              onSelected: (_) => setState(() => _selectedMode = mode),
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : const Color(0xFF1976D2),
+                fontWeight: FontWeight.bold,
+              ),
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Color(0xFF1976D2)),
+              elevation: isSelected ? 2 : 0,
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // ----------- OTHER MODES display ----------
+  Widget _buildOtherModeContent(BuildContext context) {
+    if (_selectedMode == 'Quick Mode') {
+      return Card(
+        margin: const EdgeInsets.only(top: 8),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Quick Mode',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'A rapid-fire quiz round with random questions from all categories.',
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Start Quick Quiz'),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Quick Quiz starting (not implemented)!'),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1976D2),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    // Add more else if blocks for additional modes
+    return Container();
+  }
+
+  // ----------- UI sections from your previous code ------------
 
   Widget _buildWelcomeSection(BuildContext context, UserData userData) {
     return Card(
@@ -473,7 +576,7 @@ class _CategoryPageState extends State<CategoryPage>
   Widget _buildCategoryCard(BuildContext context, QuizCategory category) {
     return Card(
       elevation: 6,
-      shadowColor: category.color.withValues(alpha: 51), // 0.2
+      shadowColor: category.color.withOpacity(0.2), // alpha: 0.2
       child: InkWell(
         onTap: () => _startQuiz(context, category),
         borderRadius: BorderRadius.circular(16),
@@ -484,8 +587,8 @@ class _CategoryPageState extends State<CategoryPage>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                category.color.withValues(alpha: 25), // 0.1
-                category.color.withValues(alpha: 13), // 0.05
+                category.color.withOpacity(0.1), // alpha: 0.1
+                category.color.withOpacity(0.05), // alpha: 0.05
               ],
             ),
           ),
@@ -495,7 +598,7 @@ class _CategoryPageState extends State<CategoryPage>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: category.color.withValues(alpha: 51), // 0.2
+                  color: category.color.withOpacity(0.2), // alpha: 0.2
                   shape: BoxShape.circle,
                 ),
                 child: Icon(category.icon, size: 32, color: category.color),
@@ -528,26 +631,23 @@ class _CategoryPageState extends State<CategoryPage>
   }
 }
 
+// ------------ STATS CARD ------------
 class UserStatsCard extends StatelessWidget {
   final UserData userData;
-
   const UserStatsCard({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 8,
-      shadowColor: const Color(0xFF1976D2).withValues(alpha: 25), // 0.1
+      shadowColor: const Color(0xFF1976D2).withOpacity(0.1),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1976D2).withValues(alpha: 13),
-              Colors.white,
-            ], // 0.05
+            colors: [const Color(0xFF1976D2).withOpacity(0.05), Colors.white],
           ),
         ),
         child: Padding(
@@ -587,7 +687,7 @@ class UserStatsCard extends StatelessWidget {
                     Icons.star,
                     '${userData.score}',
                     'Score',
-                    Colors.amber,
+                    const Color.fromARGB(255, 223, 179, 48),
                   ),
                   _buildStatColumn(
                     context,
@@ -605,7 +705,7 @@ class UserStatsCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1976D2).withValues(alpha: 25), // 0.1
+                  color: const Color(0xFF1976D2).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -642,7 +742,7 @@ class UserStatsCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 25), // 0.1
+            color: color.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),
@@ -666,6 +766,7 @@ class UserStatsCard extends StatelessWidget {
   }
 }
 
+// ---- SCORES PAGE STUB ----
 class ScoresPage extends StatelessWidget {
   const ScoresPage({super.key});
 
@@ -719,6 +820,7 @@ class ScoresPage extends StatelessWidget {
   }
 }
 
+// ---- LEADERBOARD PAGE STUB ----
 class LeaderboardPage extends StatelessWidget {
   const LeaderboardPage({super.key});
 

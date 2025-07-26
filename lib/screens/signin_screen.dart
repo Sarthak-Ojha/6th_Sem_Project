@@ -169,14 +169,15 @@ class _SigninScreenState extends State<SigninScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             child: Card(
               elevation: 12,
-              shadowColor: Colors.black.withValues(
-                alpha: 25,
-              ), // replaces .withOpacity(0.1)
+              shadowColor: Colors.black.withAlpha(25),
               child: Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 28,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -186,11 +187,9 @@ class _SigninScreenState extends State<SigninScreen> {
                       // Logo/Icon
                       Container(
                         width: 80,
-                        height: 80,
+                        height: 70,
                         decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF1976D2,
-                          ).withValues(alpha: 25), // replaces .withOpacity(0.1)
+                          color: const Color(0xFF1976D2).withAlpha(25),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -312,7 +311,7 @@ class _SigninScreenState extends State<SigninScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Remember Me and Forgot Password
+                      // Remember Me and Forgot Password (fixed)
                       Row(
                         children: [
                           Checkbox(
@@ -323,11 +322,17 @@ class _SigninScreenState extends State<SigninScreen> {
                           ),
                           const Text('Remember me'),
                           const Spacer(),
-                          TextButton(
-                            onPressed: _isLoading
-                                ? null
-                                : _showForgotPasswordDialog,
-                            child: const Text('Forgot Password ?'),
+                          Flexible(
+                            child: TextButton(
+                              onPressed: _isLoading
+                                  ? null
+                                  : _showForgotPasswordDialog,
+                              child: const Text(
+                                'Forgot Password ?',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
                           ),
                         ],
                       ),
